@@ -5,6 +5,7 @@
  */
 package socketmanager;
 
+import chitchatserver.FriendDAO;
 import java.net.*;
 
 /**
@@ -15,7 +16,7 @@ public class SocketManager {
     
     public static void main(String[] args) {
         try{
-            ServerSocket s = new ServerSocket(3333);
+            ServerSocket s = new ServerSocket(3334);
             System.out.println("Start waiting for client...");
             
             //waiting for clients to connect. Server spends 2 threads for sending and receiving data from a client

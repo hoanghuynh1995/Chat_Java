@@ -20,13 +20,28 @@ public class Sender implements Runnable{
         this.s = s;
         this.pack = pack;
     }
+    public void setChatPackage(ChatPackage pack){
+        this.pack = pack;
+        synchronized(this){
+            this.notify();
+        }
+    }
     @Override
     public void run() {
         ObjectOutputStream oos;
         try{
             oos = new ObjectOutputStream(s.getOutputStream());
-            oos.writeObject(pack);
-            oos.flush();
+            
+            while(true){
+                    if(pack != null){
+                    oos.writeObject(pack);
+                    oos.flush();
+                    pack=null;
+                }
+                synchronized(this){
+                    this.wait();
+                }
+            }
         }catch(Exception ex){
             System.out.println(ex.getMessage());
         }

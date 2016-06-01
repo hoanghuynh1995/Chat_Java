@@ -16,5 +16,9 @@ client -> server:
 	object(code, userid, content,conversationId)
 server -> client:
 	object(code, userid, content,conversationId)
-code: -1(status); 0(chat);1(signout);2(signup)
+
+client -> server:
+	code: -1(status); 0(chat);1(signout);2(signup);3(signin)
+server->client:
+	code:-1(signup successful);0(signup failed);1(signin successful) ;2(signin failed)
 

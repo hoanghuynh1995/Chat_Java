@@ -5,16 +5,40 @@
  */
 package chitchat;
 
+import ChatPackage.ChatPackage;
+import java.io.BufferedWriter;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author ASUS
  */
 public class Server {
-    final int port = 3333;
-    ServerSocket s;
-    public static void main(String arg[]){
-        
+    public static void main(String[] args){
+        try {
+            
+            Socket s = new Socket("localhost",3334);
+            Sender send = new Sender(s,null);
+            Thread receiver = new Thread(new Receiver(s));
+            Thread sender = new Thread(send);
+            receiver.start();
+            sender.start();
+            while(true){
+                DataInputStream din=new DataInputStream(System.in);
+		din.readLine();
+                
+                ChatPackage a = new ChatPackage();
+                send.setChatPackage(a);
+                
+            }
+        } catch (IOException ex) {
+            Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

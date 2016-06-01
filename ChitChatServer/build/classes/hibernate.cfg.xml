@@ -29,5 +29,6 @@
 	   <mapping resource="Conversation.hbm.xml"/>
 	   <mapping resource="Sentence.hbm.xml"/>
 	   <mapping resource="UserConversation.hbm.xml"/>
+	   <mapping resource="Friend.hbm.xml"/>
 	</session-factory>
 </hibernate-configuration>

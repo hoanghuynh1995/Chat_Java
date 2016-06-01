@@ -29,20 +29,39 @@ public class Sender implements Runnable{
         this.s = s;
         this.pack = pack;
     }
+    public void setChatPackage(ChatPackage.ChatPackage pack){
+        this.pack = pack;
+        synchronized(this){
+            this.notify();
+        }
+    }
     @Override
     public void run() {
-        OutputStream os;
         ObjectOutputStream oos;
-        try{
-            os = s.getOutputStream();
-            oos = new ObjectOutputStream(os);
-            oos.flush();
-            oos.writeObject(pack);
-            oos.flush();
-            oos.close();
-        }catch(Exception ex){
-            System.out.println(ex.getMessage());
-        }
+        
+            try{
+                oos = new ObjectOutputStream(s.getOutputStream());//intialized ObjectOutputStream once for every socket
+                //creating another ObjectOutputStream to write on the same Stream will throw exception
+                while(true){
+                    if(pack != null){
+                        oos.writeObject(pack);
+                        oos.flush();
+                        pack=null;
+                    }
+                    
+                    //use synchronized for blocking thread, prevent this thread to use CPU
+                    synchronized(this){
+                        wait();
+                    }
+                }
+                
+                
+                
+                
+            }catch(Exception ex){
+                System.out.println(ex.getMessage());
+            }
+        
     }
     
     

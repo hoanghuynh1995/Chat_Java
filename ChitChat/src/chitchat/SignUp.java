@@ -19,6 +19,7 @@ public class SignUp extends javax.swing.JFrame {
      */
     //waiting for response from server after signup: -1(initial),0(signup failed),1(signup successful)
     public static int responseFlag = -1;
+    Sender sender;
     
     public SignUp() {
         initComponents();
@@ -152,12 +153,13 @@ public class SignUp extends javax.swing.JFrame {
         pack.setCode(2);
         pack.setContent(user);
         try{
-            Socket s = new Socket("localhost",3333);
-            Thread sender = new Thread(new Sender(s,pack));
+            Socket s = new Socket("localhost",3334);
+            sender = new Sender(s,null);
             Thread receiver = new Thread(new Receiver(s));
-            sender.start();
+            Thread senderThread = new Thread(sender);
             receiver.start();
-            System.out.println("Started threads");
+            senderThread.start();
+            sender.setChatPackage(pack);
             receiver.join();
             if(SignUp.responseFlag == 0){
                 JOptionPane.showMessageDialog(this, "This username existed, choose another!!");

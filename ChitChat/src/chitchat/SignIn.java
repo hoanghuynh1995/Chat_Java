@@ -6,6 +6,7 @@
 package chitchat;
 
 import ChatPackage.*;
+import static java.lang.Thread.sleep;
 import java.net.Socket;
 import javax.swing.JOptionPane;
 
@@ -19,6 +20,9 @@ public class SignIn extends javax.swing.JFrame {
      * Creates new form SignIn
      */
     public static int responseFlag = -1;
+    
+    Sender sender;
+    
     public SignIn() {
         initComponents();
     }
@@ -136,19 +140,21 @@ public class SignIn extends javax.swing.JFrame {
         pack.setCode(3);
         pack.setContent(user);
         try{
-            Socket s = new Socket("localhost",3333);
-            Thread sender = new Thread(new Sender(s,pack));
+            Socket s = new Socket("localhost",3334);
+            sender = new Sender(s,null);
             Thread receiver = new Thread(new Receiver(s));
-            sender.start();
             receiver.start();
+            Thread senderThread = new Thread(sender);
+            senderThread.start();
             
+            sender.setChatPackage(pack);
             receiver.join();
             if(SignIn.responseFlag == 0){
                 JOptionPane.showMessageDialog(this, "The username doesn't exist!!");
                 return;
             }else if(SignIn.responseFlag == 1){
                 setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-                MainUI main = new MainUI();
+                MainUI main = new MainUI(tfUsername.getText());
                 main.setVisible(true);
                 dispose();
             }

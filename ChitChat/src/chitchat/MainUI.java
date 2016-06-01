@@ -5,9 +5,16 @@
  */
 package chitchat;
 
-import ChatPackage.ChatPackage;
+import ChatPackage.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultListModel;
+import javax.swing.JOptionPane;
+import javax.swing.table.DefaultTableModel;
 
 /**
  *
@@ -18,31 +25,54 @@ public class MainUI extends javax.swing.JFrame {
     /**
      * Creates new form MainUI
      */
-    public MainUI() {
+    public static Integer responseFlag = -1;
+    public static String userId;
+    
+    DefaultListModel friendModel,conversationModel;
+    Socket s;
+    Sender sender;
+    
+    public MainUI(String userId) {
+        this.userId = userId;
         initComponents();
         
+        friendModel = new DefaultListModel();
+        conversationModel = new DefaultListModel();
         
-        //delete this later
-//        Socket s;
-//        try{
-//            s = new Socket("localhost",3333);
-//            System.out.println("Port:" + s.getPort());
-////            InputStream is = s.getInputStream();
-////            ObjectInputStream ois = new ObjectInputStream(is);
-//            OutputStream os = s.getOutputStream();
-//            ObjectOutputStream oos = new ObjectOutputStream(os);
-//            
-//            ChatPackage p = new ChatPackage(1,"username",1,"content");
-//            oos.writeObject(p);
-//            //ois.close();
-//            oos.close();
-//            //is.close();
-//            os.close();
-//        }catch(Exception ex){
-//            System.out.println(ex.getMessage());
-//        }
+        init();
+        
     }
-
+    void init(){
+        connectionInit();
+        friendListInit();
+        conversationListInit();
+        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+    }
+    void connectionInit(){
+        try{
+            s = new Socket("localhost",3334);
+            sender = new Sender(s,null);
+            //second parameter is used for MainUI to receive data from receiver
+            Thread receiver = new Thread(new Receiver(s,this));
+            receiver.start();
+            Thread senderThread = new Thread(sender);
+            senderThread.start();
+            //no sender thread is intialized, because it is only created whenever we send package
+        }catch(Exception ex){
+            System.out.println("Connection error: " + ex.getMessage());
+        }
+    }
+    void friendListInit(){
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(5);
+        pack.setUsername(userId);
+        sender.setChatPackage(pack);
+        listFriends.setModel(friendModel);
+    }
+    void conversationListInit(){
+        listConversations.setModel(conversationModel);
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -63,6 +93,8 @@ public class MainUI extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         tfChatBox = new javax.swing.JTextField();
         btnSend = new javax.swing.JButton();
+        tfFriendId = new javax.swing.JTextField();
+        btnAddFriend = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -83,31 +115,47 @@ public class MainUI extends javax.swing.JFrame {
 
         btnSend.setText("Send");
 
+        btnAddFriend.setText("Add friend");
+        btnAddFriend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddFriendActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(jLabel1)
-                        .addGap(32, 32, 32)
-                        .addComponent(jLabel2))
+                        .addGap(0, 46, Short.MAX_VALUE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)))
+                        .addGap(3, 3, 3)
+                        .addComponent(jLabel2))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                        .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(jLabel3))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabel3))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(28, 28, 28)
+                                .addComponent(btnAddFriend))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(tfChatBox, javax.swing.GroupLayout.PREFERRED_SIZE, 222, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
-                        .addComponent(btnSend)))
-                .addContainerGap(166, Short.MAX_VALUE))
+                        .addComponent(btnSend))))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -122,7 +170,13 @@ public class MainUI extends javax.swing.JFrame {
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
                     .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
-                        .addComponent(jScrollPane3)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane3)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(btnAddFriend)
+                                .addGap(0, 0, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(tfChatBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -132,6 +186,42 @@ public class MainUI extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnAddFriendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddFriendActionPerformed
+        if(tfFriendId.getText().equals("")){
+            JOptionPane.showMessageDialog(this, "Please type friend's username!!");
+            return;
+        }
+        for(int i=0;i<friendModel.getSize();i++){
+            if(tfFriendId.getText().equals(friendModel.get(i).toString()))
+            {
+                JOptionPane.showMessageDialog(this, "This user was already your friend!!");
+                return;
+            }
+        }
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(4);
+        pack.setUsername(userId);
+        pack.setContent(tfFriendId.getText());
+        sender.setChatPackage(pack);
+        //while(MainUI.responseFlag==-1);
+        //System.out.println("MainUI: Friend doesn't exist");
+        while(true){
+            System.out.print(1);
+            if(MainUI.responseFlag == 0){
+                JOptionPane.showMessageDialog(this, "Friend's username doesn't exist!!");
+                MainUI.responseFlag = -1;
+                return;
+            }
+            if(MainUI.responseFlag == 1){
+                JOptionPane.showMessageDialog(this, "Add friend successful!!");
+                MainUI.responseFlag = -1;
+                friendModel.addElement(tfFriendId.getText());
+                tfFriendId.setText("");
+                return;
+            }
+        }
+    }//GEN-LAST:event_btnAddFriendActionPerformed
 
     /**
      * @param args the command line arguments
@@ -163,12 +253,13 @@ public class MainUI extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new MainUI().setVisible(true);
+                new MainUI(userId).setVisible(true);
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAddFriend;
     private javax.swing.JButton btnSend;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -180,5 +271,12 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JList<String> listFriends;
     private javax.swing.JTextField tfChatBox;
     private javax.swing.JTextArea tfConversation;
+    private javax.swing.JTextField tfFriendId;
     // End of variables declaration//GEN-END:variables
+
+    public void addFriendList(List<Friend> friendList){
+        for(int i=0;i<friendList.size();i++){
+            friendModel.addElement(friendList.get(i).getFriendId());
+        }
+    }
 }

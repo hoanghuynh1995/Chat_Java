@@ -6,9 +6,15 @@
 package chitchat;
 
 import ChatPackage.ChatPackage;
+import ChatPackage.Friend;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -17,11 +23,14 @@ import java.net.Socket;
 public class Receiver implements Runnable{
     Socket s;
     ChatPackage pack;
-    
+    MainUI MainUIRef;
+    public Receiver(Socket s, MainUI ref){
+        this.s = s;
+        MainUIRef = ref;
+    }
     public Receiver(Socket s){
         this.s = s;
     }
-    
     @Override
     public void run() {
         InputStream is;
@@ -41,8 +50,10 @@ public class Receiver implements Runnable{
                         break;
                     }
                     case 0:{//signup failed
-                        SignUp.responseFlag = 0;
-                        loop = false;
+                        //SignUp.responseFlag = 0;
+                        
+                        //loop = false;
+                        System.out.println("Received!");
                         break;
                     }
                     case 1:{//sign in successful
@@ -55,12 +66,34 @@ public class Receiver implements Runnable{
                         loop = false;
                         break;
                     }
+                    case 3:{//FriendId doesn't exist
+                        MainUI.responseFlag = 0;
+                        System.out.println("Friend doesn't exist");
+                        synchronized(MainUI.responseFlag){
+                            MainUI.responseFlag.notifyAll();
+                        }
+                        break;
+                    }
+                    case 4:{//add friend successful
+                        MainUI.responseFlag = 1;
+                        break;
+                    }
+                    case 5:{//friend list
+                        List<Friend> friendList = (List<Friend>)pack.getContent();
+                        MainUIRef.addFriendList(friendList);
+                        break;
+                    }
                 }
                 //--------------------------------------------------------------------------------------------
-                s.close();
+                
             }
         }catch(Exception ex){
             System.out.println(ex.getMessage());
+        }
+        try {
+            s.close();
+        } catch (IOException ex) {
+            Logger.getLogger(Receiver.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
