@@ -150,7 +150,7 @@ public class SignIn extends javax.swing.JFrame {
             sender.setChatPackage(pack);
             receiver.join();
             if(SignIn.responseFlag == 0){
-                JOptionPane.showMessageDialog(this, "The username doesn't exist!!");
+                JOptionPane.showMessageDialog(this, "Sign in failed!!");
                 return;
             }else if(SignIn.responseFlag == 1){
                 setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);

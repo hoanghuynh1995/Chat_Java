@@ -6,6 +6,8 @@
 package chitchatserver;
 
 import ChatPackage.User;
+import java.util.List;
+import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 
@@ -52,6 +54,28 @@ public class UserDAO {
             Transaction transaction = session.beginTransaction();
             session.update(user);
             transaction.commit();
+        }catch(Exception ex){
+            System.out.println(ex.getMessage());
+        }finally{
+            session.close();
+        }
+        return true;
+    }
+    public static boolean signIn(User user){
+        if(getUser(user.getId()) == null){
+            return false;
+        }
+        Session session = HibernateUtil.getSessionFactory().openSession();
+        try{
+            List<User> temp = null;
+            String hql = "from User u where u.id=:userId and u.pass=:userPass";
+            Query query = session.createQuery(hql);
+            query.setString("userId", user.getId());
+            query.setString("userPass", user.getPass());
+            temp = query.list();
+            if(temp.size() == 0){
+                return false;
+            }
         }catch(Exception ex){
             System.out.println(ex.getMessage());
         }finally{

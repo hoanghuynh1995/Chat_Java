@@ -87,11 +87,10 @@ public class Receiver implements Runnable{
                     }
                     case 3:{//sign in
                         User user = (User)pack.getContent();
-                        if(UserDAO.getUser(user.getId()) == null){//user doesn't exist
+                        if(!UserDAO.signIn(user)){//user doesn't exist
                             ChatPackage pack = new ChatPackage();
                             pack.setCode(2);
                             sender.setChatPackage(pack);
-                            loop = false;//disconnect if signing in fails
                         }else{//sign in successful
                             ChatPackage pack = new ChatPackage();
                             pack.setCode(1);
@@ -100,7 +99,6 @@ public class Receiver implements Runnable{
                             user.setStatus("Online");
                             UserDAO.updateUser(user);
                         }
-                        loop=false;
                         break;
                     }
                     case 4:{//add friend
