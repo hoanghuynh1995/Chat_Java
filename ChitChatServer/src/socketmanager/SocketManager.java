@@ -5,6 +5,7 @@
  */
 package socketmanager;
 
+import chitchatserver.ConversationDAO;
 import chitchatserver.FriendDAO;
 import java.net.*;
 
@@ -16,8 +17,11 @@ public class SocketManager {
     
     public static void main(String[] args) {
         try{
+           
             ServerSocket s = new ServerSocket(3334);
             System.out.println("Start waiting for client...");
+            
+            ReceiverManager receiverManager = new ReceiverManager();
             
             //waiting for clients to connect. Server spends 2 threads for sending and receiving data from a client
             while(true){
@@ -25,7 +29,9 @@ public class SocketManager {
                 System.out.println("before starting: client port:" + ss.getPort());
                 System.out.println("before starting: connection dead:" + ss.isClosed());
                 //Receiver includes Sender
-                Thread receiver = new Thread(new Receiver(ss));
+                Receiver r = new Receiver(ss,receiverManager);
+                System.out.println("Receiver list count: " + receiverManager.receiverCount());
+                Thread receiver = new Thread(r);
                 receiver.start();
                 System.out.println("after starting: connection dead:" + ss.isClosed());
             }

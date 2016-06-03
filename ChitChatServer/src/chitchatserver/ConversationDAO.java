@@ -27,21 +27,19 @@ public class ConversationDAO {
         return rs;
     }
     
-    public static boolean addConversation(Conversation conversation){
+    public static int addConversation(Conversation conversation){
         
-        if(ConversationDAO.getConversation(conversation.getId()) != null){
-            return false;
-        }
         Session session = HibernateUtil.getSessionFactory().openSession();
         try{
             Transaction transaction = session.beginTransaction();
             session.save(conversation);
             transaction.commit();
+            
         }catch(Exception ex){
             System.out.println(ex.getMessage());
         }finally{
             session.close();
         }
-        return true;
+        return conversation.getId();
     }
 }

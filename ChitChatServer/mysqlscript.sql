@@ -13,9 +13,8 @@ create table `chatapplication`.`conversation`(
     name nvarchar(50),
     primary key(id)
 );
-drop table `chatapplication`.`conversation`;
 create table `chatapplication`.`sentence`(
-	id int,
+	id int auto_increment,
     userid varchar(20),
     conversationid int,
     content nvarchar(256),
@@ -24,11 +23,26 @@ create table `chatapplication`.`sentence`(
 );
 
 create table `chatapplication`.`userconversation`(
-	id int,
+	id int auto_increment,
 	userid varchar(20),
     conversationid int,
     primary key(id)
 );
+
+create table `chatapplication`.`friend`(
+	id int auto_increment,
+    userid varchar(20),
+    friendid varchar(20),
+    primary key(id)
+);
+
+insert into `chatapplication`.`friend`(userid,friendid)
+values('usernumber1','usernumber2'),
+		('usernumber2','usernumber1'),
+        ('123123','usernumber1'),
+        ('usernumber1','123123'),
+        ('123123','usernumber2'),
+        ('usernumber2','123123');
 
 insert into `chatapplication`.`conversation`(name)
 values ('conversation1'),

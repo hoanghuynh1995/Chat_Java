@@ -6,6 +6,8 @@
 package chitchat;
 
 import ChatPackage.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
@@ -31,6 +34,8 @@ public class MainUI extends javax.swing.JFrame {
     DefaultListModel friendModel,conversationModel;
     Socket s;
     Sender sender;
+    
+    List<Conversation> groupList;
     
     public MainUI(String userId) {
         this.userId = userId;
@@ -57,7 +62,11 @@ public class MainUI extends javax.swing.JFrame {
             receiver.start();
             Thread senderThread = new Thread(sender);
             senderThread.start();
-            //no sender thread is intialized, because it is only created whenever we send package
+            
+            ChatPackage pack = new ChatPackage();
+            pack.setCode(-2);
+            pack.setUsername(userId);
+            sender.setChatPackage(pack);
         }catch(Exception ex){
             System.out.println("Connection error: " + ex.getMessage());
         }
@@ -67,9 +76,26 @@ public class MainUI extends javax.swing.JFrame {
         pack.setCode(5);
         pack.setUsername(userId);
         sender.setChatPackage(pack);
+        System.out.println("Send friend list request");
         listFriends.setModel(friendModel);
+        
+        listFriends.addMouseListener(new MouseAdapter(){
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    // Double-click detected
+                    int index = listFriends.getSelectedIndex();
+                    System.out.println(friendModel.get(index));
+                    startConversation((String)friendModel.get(index));
+                }
+            }
+        });
     }
     void conversationListInit(){
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(6);
+        pack.setUsername(userId);
+        System.out.println("Send conversation list request");
+        sender.setChatPackage(pack);
         listConversations.setModel(conversationModel);
     }
     
@@ -90,7 +116,7 @@ public class MainUI extends javax.swing.JFrame {
         listConversations = new javax.swing.JList<>();
         jScrollPane3 = new javax.swing.JScrollPane();
         tfConversation = new javax.swing.JTextArea();
-        jLabel3 = new javax.swing.JLabel();
+        lbConversationName = new javax.swing.JLabel();
         tfChatBox = new javax.swing.JTextField();
         btnSend = new javax.swing.JButton();
         tfFriendId = new javax.swing.JTextField();
@@ -111,7 +137,7 @@ public class MainUI extends javax.swing.JFrame {
         tfConversation.setRows(5);
         jScrollPane3.setViewportView(tfConversation);
 
-        jLabel3.setText("Conversation name");
+        lbConversationName.setText("Conversation name");
 
         btnSend.setText("Send");
 
@@ -144,7 +170,7 @@ public class MainUI extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                             .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3))
+                            .addComponent(lbConversationName))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addGap(28, 28, 28)
@@ -164,7 +190,7 @@ public class MainUI extends javax.swing.JFrame {
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
                     .addComponent(jLabel2)
-                    .addComponent(jLabel3))
+                    .addComponent(lbConversationName))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
@@ -263,10 +289,10 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btnSend;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
-    private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
+    private javax.swing.JLabel lbConversationName;
     private javax.swing.JList<String> listConversations;
     private javax.swing.JList<String> listFriends;
     private javax.swing.JTextField tfChatBox;
@@ -278,5 +304,14 @@ public class MainUI extends javax.swing.JFrame {
         for(int i=0;i<friendList.size();i++){
             friendModel.addElement(friendList.get(i).getFriendId());
         }
+    }
+    public void addConversationList(List<Conversation> conversationList){
+        groupList = conversationList;
+        for(int i=0;i<conversationList.size();i++){
+            conversationModel.addElement(conversationList.get(i).getName());
+        }
+    }
+    void startConversation(String friendId){
+        
     }
 }

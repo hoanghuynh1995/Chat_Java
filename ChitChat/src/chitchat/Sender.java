@@ -16,11 +16,16 @@ import java.net.Socket;
 public class Sender implements Runnable{
     Socket s;
     ChatPackage pack;
+    Boolean free = true;
     public Sender(Socket s, ChatPackage pack){
         this.s = s;
         this.pack = pack;
     }
     public void setChatPackage(ChatPackage pack){
+        synchronized(free){
+            while(!free);
+        }
+        free = false;
         this.pack = pack;
         synchronized(this){
             this.notify();
@@ -35,8 +40,10 @@ public class Sender implements Runnable{
             while(true){
                     if(pack != null){
                     oos.writeObject(pack);
+                    System.out.println("Sent");
                     oos.flush();
                     pack=null;
+                    free = true;
                 }
                 synchronized(this){
                     this.wait();

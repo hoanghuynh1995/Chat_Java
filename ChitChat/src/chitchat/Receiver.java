@@ -5,8 +5,7 @@
  */
 package chitchat;
 
-import ChatPackage.ChatPackage;
-import ChatPackage.Friend;
+import ChatPackage.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -79,8 +78,15 @@ public class Receiver implements Runnable{
                         break;
                     }
                     case 5:{//friend list
+                        System.out.println("Received friend list");
                         List<Friend> friendList = (List<Friend>)pack.getContent();
                         MainUIRef.addFriendList(friendList);
+                        break;
+                    }
+                    case 6:{//conversation list
+                        System.out.println("Received conversation list");
+                        List<Conversation> conversationList = (List<Conversation>)pack.getContent();
+                        MainUIRef.addConversationList(conversationList);
                         break;
                     }
                 }
