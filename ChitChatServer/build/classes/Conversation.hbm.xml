@@ -11,5 +11,11 @@
         <property name="name" type="java.lang.String">
 			<column name="name"/>
 		</property>
+		<property name="groupChat" type="boolean">
+			<column name="groupchat"/>
+		</property>
+		<property name="totalSentence" type="int">
+			<column name="totalsentence"/>
+		</property>
 	</class>
 </hibernate-mapping>

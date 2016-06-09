@@ -26,7 +26,7 @@ public class UserConversationDAO {
             query.setString("userId", userId);
             rs = query.list();
         }catch(Exception ex){
-            System.out.println("Error getting UserConversation");
+            System.out.println("Error getting UserConversation" + ex.getMessage());
         }finally{
             session.close();
         }
@@ -37,28 +37,25 @@ public class UserConversationDAO {
         List<UserConversation> rs = null;
         Session session = HibernateUtil.getSessionFactory().openSession();
         try{
-            String hql = "from UserConversation u where u.conversationId:=conversationid";
+            String hql = "from UserConversation u where u.conversationId=:convId";
             Query query = session.createQuery(hql);
-            query.setInteger("conversationid", conversationId);
+            query.setInteger("convId", conversationId);
             rs = query.list();
         }catch(Exception ex){
-            System.out.println("Error getting UserConversation");
+            System.out.println("Error getting UserConversation" + ex.getMessage());
         }finally{
             session.close();
         }
         return rs;
     }
     public static boolean addUserConversation(UserConversation uc){
-        if(getUserConversation(uc.getId()) != null){
-            return false;
-        }
         Session session = HibernateUtil.getSessionFactory().openSession();
         try{
             Transaction transaction = session.beginTransaction();
             session.save(uc);
             transaction.commit();
         }catch(Exception ex){
-            System.out.println(ex.getMessage());
+            System.out.println("Error adding UserConversation: " + ex.getMessage());
         }finally{
             session.close();
         }

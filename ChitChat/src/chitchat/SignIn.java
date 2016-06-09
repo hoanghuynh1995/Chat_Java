@@ -45,6 +45,7 @@ public class SignIn extends javax.swing.JFrame {
         tfPassword = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("Sign In");
 
         jLabel1.setFont(new java.awt.Font("Tahoma", 0, 24)); // NOI18N
         jLabel1.setText("ChitChat");
@@ -52,6 +53,12 @@ public class SignIn extends javax.swing.JFrame {
         jLabel2.setText("Username:");
 
         jLabel3.setText("Password:");
+
+        tfUsername.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfUsernameActionPerformed(evt);
+            }
+        });
 
         btnSignIn.setText("Sign in");
         btnSignIn.addActionListener(new java.awt.event.ActionListener() {
@@ -65,6 +72,12 @@ public class SignIn extends javax.swing.JFrame {
         jLabel4.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 CreateAccount(evt);
+            }
+        });
+
+        tfPassword.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfPasswordActionPerformed(evt);
             }
         });
 
@@ -162,6 +175,14 @@ public class SignIn extends javax.swing.JFrame {
             System.out.println(ex.getMessage());
         }
     }//GEN-LAST:event_btnSignInActionPerformed
+
+    private void tfPasswordActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfPasswordActionPerformed
+        btnSignIn.doClick();
+    }//GEN-LAST:event_tfPasswordActionPerformed
+
+    private void tfUsernameActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfUsernameActionPerformed
+        btnSignIn.doClick();
+    }//GEN-LAST:event_tfUsernameActionPerformed
 
     /**
      * @param args the command line arguments

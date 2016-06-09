@@ -14,15 +14,34 @@ import java.io.Serializable;
 public class Conversation implements Serializable{
     int id;
     String name;
-
+    boolean groupChat;
+    int totalSentence;
     public Conversation() {
     }
 
    
 
-    public Conversation(int id, String name) {
+    public Conversation(int id, String name, boolean groupChat, int totalSentence) {
         this.id = id;
         this.name = name;
+        this.groupChat = groupChat;
+        this.totalSentence = totalSentence;
+    }
+
+    public int getTotalSentence() {
+        return totalSentence;
+    }
+
+    public void setTotalSentence(int totalSentence) {
+        this.totalSentence = totalSentence;
+    }
+
+    public boolean isGroupChat() {
+        return groupChat;
+    }
+
+    public void setGroupChat(boolean groupChat) {
+        this.groupChat = groupChat;
     }
 
     public int getId() {

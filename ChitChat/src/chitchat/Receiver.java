@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -43,6 +44,10 @@ public class Receiver implements Runnable{
                 
                 //---------------------------------HANDLE CODE CASES------------------------------------------
                 switch(pack.getCode()){
+                    case -3:{//test
+                        JOptionPane.showMessageDialog(null, "Test!!");
+                        break;
+                    }
                     case -1:{//signup successful
                         SignUp.responseFlag = 1;
                         loop = false;
@@ -78,16 +83,40 @@ public class Receiver implements Runnable{
                         break;
                     }
                     case 5:{//friend list
-                        System.out.println("Received friend list");
-                        List<Friend> friendList = (List<Friend>)pack.getContent();
-                        MainUIRef.addFriendList(friendList);
+//                        System.out.println("Received friend list");
+//                        List<Friend> friendList = (List<Friend>)pack.getContent();
+//                        MainUIRef.addFriendList(friendList);
                         break;
                     }
                     case 6:{//conversation list
-                        System.out.println("Received conversation list");
+                        System.out.println("Received group conversation list");
                         List<Conversation> conversationList = (List<Conversation>)pack.getContent();
-                        MainUIRef.addConversationList(conversationList);
+                        MainUIRef.addGroupConversationList(conversationList);
                         break;
+                    }
+                    case 7:{
+                        System.out.println("Received friend conversation list");
+                        List<Conversation> conversationList = (List<Conversation>)pack.getContent();
+                        MainUIRef.addFriendConversationList(conversationList);
+                        break;
+                    }
+                    case 8:{//conversation's sentence
+                        System.out.println("Received conversation's sentence");
+                        MainUIRef.setCurrentConversation((List<Sentence>)pack.getContent(),pack.getConversationId());
+                        break;
+                    }
+                    case 9:{//chat
+                        MainUIRef.addSentence((Sentence)pack.getContent());
+                        break;
+                    }
+                    case 10:{//add group conversation
+                        if(pack.getConversationId() == -1){//one of members's ids doesn't exist
+                            JOptionPane.showMessageDialog(MainUIRef, "Please choose a conversation!!");
+                            break;
+                        }else{
+                            MainUIRef.addGroupToList((Conversation)pack.getContent());
+                            break;
+                        }
                     }
                 }
                 //--------------------------------------------------------------------------------------------

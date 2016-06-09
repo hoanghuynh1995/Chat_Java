@@ -65,7 +65,7 @@ public class Sender implements Runnable{
                     if(pack != null){
                         queueLock.lock();
                         oos.writeObject(pack);
-                        System.out.println("Sent");
+                        //System.out.println("Sent");
                         oos.flush();
                         pack=null;
                         free = true;

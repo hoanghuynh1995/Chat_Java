@@ -6,17 +6,26 @@
 package chitchat;
 
 import ChatPackage.*;
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
+import javax.swing.JDialog;
+import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JTextField;
+import javax.swing.ListCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
@@ -35,12 +44,16 @@ public class MainUI extends javax.swing.JFrame {
     Socket s;
     Sender sender;
     
-    List<Conversation> groupList;
+    
+    
+    
+    List<Sentence> currentConversation = null;
+    int currentConversationId = -1;
     
     public MainUI(String userId) {
         this.userId = userId;
         initComponents();
-        
+        this.setTitle("ChitChat - " + userId);
         friendModel = new DefaultListModel();
         conversationModel = new DefaultListModel();
         
@@ -78,14 +91,19 @@ public class MainUI extends javax.swing.JFrame {
         sender.setChatPackage(pack);
         System.out.println("Send friend list request");
         listFriends.setModel(friendModel);
-        
+        listFriends.setCellRenderer(new CellRenderer(userId));
         listFriends.addMouseListener(new MouseAdapter(){
             public void mouseClicked(MouseEvent evt) {
                 if (evt.getClickCount() == 2) {
                     // Double-click detected
+                    tfConversation.setText("");
+                    lbConversationName.setText(CellRenderer.friendName(((Conversation)(Object)listFriends.getSelectedValue()).getName(), userId));
+                    Conversation a = (Conversation)(Object)listFriends.getSelectedValue();
                     int index = listFriends.getSelectedIndex();
-                    System.out.println(friendModel.get(index));
-                    startConversation((String)friendModel.get(index));
+                    ChatPackage pack = new ChatPackage();
+                    pack.setCode(7);
+                    pack.setConversationId(a.getId());
+                    sender.setChatPackage(pack);
                 }
             }
         });
@@ -97,6 +115,22 @@ public class MainUI extends javax.swing.JFrame {
         System.out.println("Send conversation list request");
         sender.setChatPackage(pack);
         listConversations.setModel(conversationModel);
+        listConversations.setCellRenderer(new CellRenderer(userId));
+        listConversations.addMouseListener(new MouseAdapter(){
+            public void mouseClicked(MouseEvent evt) {
+                if (evt.getClickCount() == 2) {
+                    // Double-click detected
+                    tfConversation.setText("");
+                    lbConversationName.setText(((Conversation)(Object)listConversations.getSelectedValue()).getName());
+                    Conversation a = (Conversation)(Object)listConversations.getSelectedValue();
+                    
+                    ChatPackage pack = new ChatPackage();
+                    pack.setCode(7);
+                    pack.setConversationId(a.getId());
+                    sender.setChatPackage(pack);
+                }
+            }
+        });
     }
     
     /**
@@ -121,6 +155,7 @@ public class MainUI extends javax.swing.JFrame {
         btnSend = new javax.swing.JButton();
         tfFriendId = new javax.swing.JTextField();
         btnAddFriend = new javax.swing.JButton();
+        btnAddGroup = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -128,7 +163,7 @@ public class MainUI extends javax.swing.JFrame {
 
         jScrollPane1.setViewportView(listFriends);
 
-        jLabel2.setText("Conversations");
+        jLabel2.setText("Group");
 
         jScrollPane2.setViewportView(listConversations);
 
@@ -139,12 +174,36 @@ public class MainUI extends javax.swing.JFrame {
 
         lbConversationName.setText("Conversation name");
 
+        tfChatBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfChatBoxActionPerformed(evt);
+            }
+        });
+
         btnSend.setText("Send");
+        btnSend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnSendActionPerformed(evt);
+            }
+        });
+
+        tfFriendId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfFriendIdActionPerformed(evt);
+            }
+        });
 
         btnAddFriend.setText("Add friend");
         btnAddFriend.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 btnAddFriendActionPerformed(evt);
+            }
+        });
+
+        btnAddGroup.setText("Add Group");
+        btnAddGroup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddGroupActionPerformed(evt);
             }
         });
 
@@ -173,11 +232,13 @@ public class MainUI extends javax.swing.JFrame {
                             .addComponent(lbConversationName))
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
-                                .addGap(28, 28, 28)
-                                .addComponent(btnAddFriend))
-                            .addGroup(layout.createSequentialGroup()
                                 .addGap(18, 18, 18)
-                                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(28, 28, 28)
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(btnAddGroup)
+                                    .addComponent(btnAddFriend)))))
                     .addGroup(layout.createSequentialGroup()
                         .addComponent(tfChatBox, javax.swing.GroupLayout.PREFERRED_SIZE, 222, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(18, 18, 18)
@@ -202,6 +263,8 @@ public class MainUI extends javax.swing.JFrame {
                                 .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(btnAddFriend)
+                                .addGap(28, 28, 28)
+                                .addComponent(btnAddGroup)
                                 .addGap(0, 0, Short.MAX_VALUE)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -219,7 +282,7 @@ public class MainUI extends javax.swing.JFrame {
             return;
         }
         for(int i=0;i<friendModel.getSize();i++){
-            if(tfFriendId.getText().equals(friendModel.get(i).toString()))
+            if(tfFriendId.getText().equals(getFriendIdFromConversation((Conversation)friendModel.get(i))))
             {
                 JOptionPane.showMessageDialog(this, "This user was already your friend!!");
                 return;
@@ -242,12 +305,52 @@ public class MainUI extends javax.swing.JFrame {
             if(MainUI.responseFlag == 1){
                 JOptionPane.showMessageDialog(this, "Add friend successful!!");
                 MainUI.responseFlag = -1;
-                friendModel.addElement(tfFriendId.getText());
+                //friendModel.addElement(tfFriendId.getText());
+                ChatPackage temp = new ChatPackage();
+                temp.setCode(6);
+                temp.setUsername(userId);
+                sender.setChatPackage(temp);
                 tfFriendId.setText("");
                 return;
             }
         }
     }//GEN-LAST:event_btnAddFriendActionPerformed
+
+    private void btnSendActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendActionPerformed
+        if(tfChatBox.getText().equals("")){
+            return;
+        }
+        if(currentConversationId == -1){
+            JOptionPane.showMessageDialog(this, "Please choose a conversation!!");
+            return;
+        }
+        Sentence sentence = new Sentence();
+        sentence.setUserId(userId);
+        sentence.setConversationId(currentConversationId);
+        sentence.setContent(tfChatBox.getText());
+        
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(0);
+        pack.setConversationId(currentConversationId);
+        pack.setContent(sentence);
+        pack.setUsername(userId);
+        
+        sender.setChatPackage(pack);
+        tfChatBox.setText("");
+    }//GEN-LAST:event_btnSendActionPerformed
+
+    private void tfChatBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfChatBoxActionPerformed
+        btnSend.doClick();
+    }//GEN-LAST:event_tfChatBoxActionPerformed
+
+    private void tfFriendIdActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_tfFriendIdActionPerformed
+        btnAddFriend.doClick();
+    }//GEN-LAST:event_tfFriendIdActionPerformed
+
+    private void btnAddGroupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddGroupActionPerformed
+        AddGroupDialog dialog = new AddGroupDialog(this);
+        dialog.setVisible(true);
+    }//GEN-LAST:event_btnAddGroupActionPerformed
 
     /**
      * @param args the command line arguments
@@ -286,6 +389,7 @@ public class MainUI extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnAddFriend;
+    private javax.swing.JButton btnAddGroup;
     private javax.swing.JButton btnSend;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
@@ -300,18 +404,124 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JTextField tfFriendId;
     // End of variables declaration//GEN-END:variables
 
-    public void addFriendList(List<Friend> friendList){
-        for(int i=0;i<friendList.size();i++){
-            friendModel.addElement(friendList.get(i).getFriendId());
+//    public void addFriendList(List<Friend> friendList){
+//        for(int i=0;i<friendList.size();i++){
+//            friendModel.addElement(friendList.get(i).getFriendId());
+//        }
+//    }
+    public void addGroupConversationList(List<Conversation> conversationList){
+        conversationModel.clear();
+        for(int i=0;i<conversationList.size();i++){
+            conversationModel.addElement(conversationList.get(i));
         }
     }
-    public void addConversationList(List<Conversation> conversationList){
-        groupList = conversationList;
+    public void addFriendConversationList(List<Conversation> conversationList){
+        friendModel.clear();
         for(int i=0;i<conversationList.size();i++){
-            conversationModel.addElement(conversationList.get(i).getName());
+            friendModel.addElement(conversationList.get(i));
         }
     }
     void startConversation(String friendId){
         
+    }
+    void loadConversation(String friendId){
+        
+    }
+    String getFriendIdFromConversation(Conversation c){
+        String rs = null;
+        String cname = ((Conversation)c).getName();
+        String name1 = cname.substring(0,cname.indexOf(" - "));
+        String name2 = cname.substring(cname.indexOf(" - ") + 3, cname.length());
+        return name1.equals(userId)?name2:name1;
+    }
+    void setCurrentConversation(List<Sentence> sentenceList,int ConversationId){
+        //Collections.sort(sentenceList,new SentenceListComparator());
+        currentConversation = sentenceList;
+        
+        renderConversation();
+        this.currentConversationId = ConversationId;
+    }
+    void renderConversation(){
+        for(int i=0;i<currentConversation.size();i++){
+            tfConversation.append(currentConversation.get(i).getUserId() + " : " +
+                    currentConversation.get(i).getContent() + "\n");
+        }
+        tfConversation.setCaretPosition(tfConversation.getDocument().getLength());
+        
+    }
+    void addSentence(Sentence s){
+        if(s.getConversationId() != currentConversationId){
+            return;
+        }
+        currentConversation.add(s);
+        tfConversation.append(s.getUserId() + " : " + s.getContent() + "\n");
+        tfConversation.setCaretPosition(tfConversation.getDocument().getLength());
+    }
+    
+    void addGroupToList(Conversation groupConversation){
+        conversationModel.addElement(groupConversation);
+    }
+
+    void addGroupRequest(List<String> UserIds, String groupName) {
+        if(UserIds.indexOf(userId) == -1){
+            UserIds.add(0, userId);
+        }
+        groupName += " : ";
+        for(int i=0;i<UserIds.size();i++){
+            groupName += UserIds.get(i) + " - ";
+        }
+        groupName = groupName.substring(0,groupName.length()-3);
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(8);
+        pack.setUsername(groupName);//userId temperarily to be groupName for this case
+        pack.setContent(UserIds);
+        sender.setChatPackage(pack);
+    }
+    
+}
+
+class SentenceListComparator implements Comparator<Sentence>{
+
+    @Override
+    public int compare(Sentence o1, Sentence o2) {
+        return ((Integer)o1.getSequence()).compareTo((Integer)o2.getSequence());
+    }
+    
+}
+
+class CellRenderer implements ListCellRenderer{
+    String userId;
+    public CellRenderer(String userId){
+        this.userId = userId;
+    }
+    @Override
+    public Component getListCellRendererComponent(JList list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+        //setText(((student)value).name);
+        JLabel label = new JLabel();
+        label.setOpaque(true);
+        label.setBackground(Color.WHITE);
+        if(((Conversation)(value)).isGroupChat()){
+            String cname = ((Conversation)value).getName();
+            String name = cname.substring(0,cname.indexOf(" :"));
+            label.setText(name);
+        }else{
+            String cname = ((Conversation)value).getName();
+            String name1 = cname.substring(0,cname.indexOf(" - "));
+            String name2 = cname.substring(cname.indexOf(" - ") + 3, cname.length());
+            label.setText(name1.equals(userId)?name2:name1);
+        }
+        if(isSelected){
+            label.setBackground(Color.LIGHT_GRAY);
+        }
+        return label;
+    }
+    
+    public static String friendName(String conversationName, String userName){
+        if(conversationName == ""){
+            return "";
+        }
+        String name1 = conversationName.substring(0,conversationName.indexOf(" - "));
+        String name2 = conversationName.substring(conversationName.indexOf(" - ") + 3, conversationName.length());
+        return name1.equals(userName)?name2:name1;
     }
 }

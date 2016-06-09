@@ -12,6 +12,7 @@ package socketmanager;
 import ChatPackage.*;
 import chitchatserver.ConversationDAO;
 import chitchatserver.FriendDAO;
+import chitchatserver.SentenceDAO;
 import chitchatserver.UserConversationDAO;
 import chitchatserver.UserDAO;
 import java.io.BufferedReader;
@@ -43,6 +44,7 @@ public class Receiver implements Runnable{
         this.receiverManager = receiverManager;
         sender = new Sender(s,null);
         Thread t = new Thread(sender);
+        t.setPriority(2);
         t.start();
     }     
     
@@ -66,16 +68,20 @@ public class Receiver implements Runnable{
                 
                 //-------------------------------------HANDLE CODE CASES------------------------------------
                 switch(pack.getCode()){
-                    case -2:{
+                    case -2:{//receive userId
                         userId = pack.getUsername();
                         System.out.println("Username: " + userId);
                         receiverManager.addReceiver(this);
-                        System.out.println("Receiver list count: " + receiverManager.receiverCount());
+                        System.out.println("Receiver list count: " + receiverManager.receiverList.size());
+                        for(int i=0;i<receiverManager.receiverList.size();i++){
+                            System.out.println(receiverManager.receiverList.get(i).userId);
+                        }
                         break;
                     }
-                    case 0:{
-//                        ChatPackage pack = new ChatPackage();
-//                        sender.setChatPackage(pack);
+                    case 0:{//chat
+                        int conversationId = pack.getConversationId();
+                        SentenceDAO.addSentence((Sentence)pack.getContent());
+                        broadcast((Sentence)pack.getContent());
                         break;
                     }
                     case 1:{//sign out
@@ -129,9 +135,27 @@ public class Receiver implements Runnable{
                             friend.setFriendId((String)pack.getContent());
                             friend.setUserId(pack.getUsername());
                             FriendDAO.addFriend(friend);
+                            String temp = friend.getUserId();
+                            friend.setUserId(friend.getFriendId());
+                            friend.setFriendId(temp);
+                            FriendDAO.addFriend(friend);
                             ChatPackage pack = new ChatPackage();
                             pack.setCode(4);
                             sender.setChatPackage(pack);
+                            
+                            //add conversation
+                            Conversation c = new Conversation();
+                            c.setGroupChat(false);
+                            c.setName(friend.getFriendId() + " - " + friend.getUserId());
+                            int conversationId = ConversationDAO.addConversation(c);
+                            UserConversation uc1 = new UserConversation();
+                            UserConversation uc2 = new UserConversation();
+                            uc1.setConversationId(conversationId);
+                            uc2.setConversationId(conversationId);
+                            uc1.setUserId(friend.getFriendId());
+                            uc2.setUserId(friend.getUserId());
+                            UserConversationDAO.addUserConversation(uc1);
+                            UserConversationDAO.addUserConversation(uc2);
                         }
                         System.out.println("Handle adding friend");
                         break;
@@ -150,14 +174,77 @@ public class Receiver implements Runnable{
                         String userId = pack.getUsername();
                         //get UserConversations
                         List<UserConversation> ucList = UserConversationDAO.getUserConversation(userId);
+                        
+                        //group conversation list
                         List<Conversation> rs = new ArrayList<Conversation>();
                         for(int i=0;i<ucList.size();i++){
-                            rs.add(ConversationDAO.getConversation(ucList.get(i).getConversationId()));
+                            Conversation temp = ConversationDAO.getConversation(ucList.get(i).getConversationId());
+                            if(temp.isGroupChat())
+                                rs.add(temp);
                         }
                         ChatPackage pack = new ChatPackage();
                         pack.setCode(6);
                         pack.setContent(rs);
                         sender.setChatPackage(pack);
+                        //
+                        
+                        //friend conversation list
+                        rs = new ArrayList<Conversation>();
+                        for(int i=0;i<ucList.size();i++){
+                            Conversation temp = ConversationDAO.getConversation(ucList.get(i).getConversationId());
+                            if(!temp.isGroupChat())
+                                rs.add(temp);
+                        }
+                        pack = new ChatPackage();
+                        pack.setCode(7);
+                        pack.setContent(rs);
+                        sender.setChatPackage(pack);
+                        break;
+                    }
+                    case 7:{//get conversation's sentences
+                        System.out.println("Get conversation's sentences request");
+                        int conversationId = pack.getConversationId();
+                        ChatPackage pack = new ChatPackage();
+                        pack.setCode(8);
+                        pack.setContent(SentenceDAO.getSentences(conversationId));
+                        pack.setConversationId(conversationId);
+                        sender.setChatPackage(pack);
+                        break;
+                    }
+                    case 8:{//add group conversation
+                        boolean failFlag = false;
+                        String conversationName = pack.getUsername();
+                        List<String> userIds = (List<String>)pack.getContent();
+                        //check userIds
+                        for(int i=0;i<userIds.size();i++){
+                            if(UserDAO.getUser(userIds.get(i)) == null){//user doesn't exist
+                                ChatPackage pack = new ChatPackage();
+                                pack.setCode(10);
+                                pack.setConversationId(-1);
+                                sender.setChatPackage(pack);
+                                failFlag = true;
+                                break;
+                            }
+                        }
+                        if(failFlag == true){
+                            break;
+                        }
+                        //add conversation
+                        Conversation c = new Conversation();
+                        c.setGroupChat(true);
+                        c.setName(conversationName);
+                        int conversationId = ConversationDAO.addConversation(c);
+                        ChatPackage pack = new ChatPackage();
+                        pack.setCode(10);
+                        pack.setContent(c);
+                        //add UserConversations
+                        for(int i=0;i<userIds.size();i++){
+                            UserConversation uc = new UserConversation();
+                            uc.setConversationId(conversationId);
+                            uc.setUserId(userIds.get(i));
+                            UserConversationDAO.addUserConversation(uc);
+                            receiverManager.send(userIds.get(i), pack);
+                        }
                         break;
                     }
                 }
@@ -179,6 +266,7 @@ public class Receiver implements Runnable{
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
+        
         receiverManager.removeReceiver(s.getPort()); 
         System.out.println("end running receiver: connection dead:" + s.isClosed());
         
@@ -189,6 +277,18 @@ public class Receiver implements Runnable{
 
     public int getPort() {
         return s.getPort();
+    }
+    public void broadcast(Sentence sentence){
+        int conversationId = sentence.getConversationId();
+        //user list with conversation id = conversationId
+        List<UserConversation> users = UserConversationDAO.getUserConversation(conversationId);
+        ChatPackage pack = new ChatPackage();
+            pack.setCode(9);
+            pack.setContent(sentence);
+            pack.setConversationId(conversationId);//optinal
+        for(int i=0;i<users.size();i++){
+            receiverManager.send(users.get(i).getUserId(), pack);
+        }
     }
 }
 

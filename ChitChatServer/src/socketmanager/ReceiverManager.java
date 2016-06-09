@@ -17,13 +17,13 @@ import java.util.logging.Logger;
  * @author ASUS
  */
 public class ReceiverManager implements Runnable{
-    private List<Receiver> receiverList;
+    public List<Receiver> receiverList;
     
     private String username;
     private ChatPackage.ChatPackage pack;
     
     private final Lock queueLock = new ReentrantLock();
-    
+   
     public ReceiverManager(){
         receiverList = new ArrayList();
         username = null;
@@ -36,38 +36,46 @@ public class ReceiverManager implements Runnable{
         receiverList.add(receiver);
     }
     public synchronized void send(String username, ChatPackage.ChatPackage pack){
+        
+        
         this.username = username;
         this.pack = pack;
         synchronized(this){
+            
             this.notify();
             try {
                 this.wait();
+                
             } catch (InterruptedException ex) {
                 Logger.getLogger(ReceiverManager.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
     }
     @Override
     public void run() {
         while(true){
+            
             queueLock.lock();
             for(int i=0;i<receiverList.size();i++){
-            if(receiverList.get(i).userId.equals(username)){
-                receiverList.get(i).send(pack);
-                break;
+                if(receiverList.get(i).userId.equals(username)){
+                    receiverList.get(i).send(pack);
+                    break;
+                }
             }
             synchronized(this){
                     this.notify();
-                }
+            } 
             synchronized(this){
                 try {
+                    
                     this.wait();
                 } catch (InterruptedException ex) {
                     Logger.getLogger(ReceiverManager.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
             queueLock.unlock();
-        }
+        
         }
     }
 
