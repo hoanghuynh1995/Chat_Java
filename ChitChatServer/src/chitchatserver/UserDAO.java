@@ -83,4 +83,12 @@ public class UserDAO {
         }
         return true;
     }
+    public static String getStatus(String userId){
+        String rs = "";
+        User user = UserDAO.getUser(userId);
+        if(user != null){
+            rs = user.getStatus();
+        }
+        return rs;
+    }
 }

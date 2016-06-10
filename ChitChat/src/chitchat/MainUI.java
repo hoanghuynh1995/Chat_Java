@@ -15,7 +15,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
@@ -64,7 +67,7 @@ public class MainUI extends javax.swing.JFrame {
         connectionInit();
         friendListInit();
         conversationListInit();
-        Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
+        
     }
     void connectionInit(){
         try{
@@ -72,10 +75,12 @@ public class MainUI extends javax.swing.JFrame {
             sender = new Sender(s,null);
             //second parameter is used for MainUI to receive data from receiver
             Thread receiver = new Thread(new Receiver(s,this));
+            receiver.setPriority(1);
             receiver.start();
             Thread senderThread = new Thread(sender);
+            senderThread.setPriority(Thread.MAX_PRIORITY);
             senderThread.start();
-            
+            Thread.sleep(100);
             ChatPackage pack = new ChatPackage();
             pack.setCode(-2);
             pack.setUsername(userId);
@@ -97,8 +102,9 @@ public class MainUI extends javax.swing.JFrame {
                 if (evt.getClickCount() == 2) {
                     // Double-click detected
                     tfConversation.setText("");
-                    lbConversationName.setText(CellRenderer.friendName(((Conversation)(Object)listFriends.getSelectedValue()).getName(), userId));
-                    Conversation a = (Conversation)(Object)listFriends.getSelectedValue();
+                    //lbConversationName.setText(CellRenderer.friendName(((Conversation)(Object)listFriends.getSelectedValue()).getName(), userId));
+                    lbConversationName.setText(((FriendConversation)(Object)listFriends.getSelectedValue()).getName());
+                    Conversation a = ((FriendConversation)(Object)listFriends.getSelectedValue()).getConversation();
                     int index = listFriends.getSelectedIndex();
                     ChatPackage pack = new ChatPackage();
                     pack.setCode(7);
@@ -148,14 +154,21 @@ public class MainUI extends javax.swing.JFrame {
         jLabel2 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         listConversations = new javax.swing.JList<>();
+        jPanel1 = new javax.swing.JPanel();
+        btnAddGroup = new javax.swing.JButton();
+        btnAddFriend = new javax.swing.JButton();
+        tfFriendId = new javax.swing.JTextField();
+        jPanel2 = new javax.swing.JPanel();
+        lbConversationName = new javax.swing.JLabel();
         jScrollPane3 = new javax.swing.JScrollPane();
         tfConversation = new javax.swing.JTextArea();
-        lbConversationName = new javax.swing.JLabel();
         tfChatBox = new javax.swing.JTextField();
         btnSend = new javax.swing.JButton();
-        tfFriendId = new javax.swing.JTextField();
-        btnAddFriend = new javax.swing.JButton();
-        btnAddGroup = new javax.swing.JButton();
+        jPanel3 = new javax.swing.JPanel();
+        jLabel3 = new javax.swing.JLabel();
+        rbOnline = new javax.swing.JRadioButton();
+        rbInvisible = new javax.swing.JRadioButton();
+        rbAway = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -167,12 +180,62 @@ public class MainUI extends javax.swing.JFrame {
 
         jScrollPane2.setViewportView(listConversations);
 
-        tfConversation.setEditable(false);
-        tfConversation.setColumns(20);
-        tfConversation.setRows(5);
-        jScrollPane3.setViewportView(tfConversation);
+        btnAddGroup.setText("Add Group");
+        btnAddGroup.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddGroupActionPerformed(evt);
+            }
+        });
+
+        btnAddFriend.setText("Add friend");
+        btnAddFriend.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddFriendActionPerformed(evt);
+            }
+        });
+
+        tfFriendId.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                tfFriendIdActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnAddGroup)
+                    .addComponent(btnAddFriend))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(btnAddFriend)
+                .addGap(57, 57, 57)
+                .addComponent(btnAddGroup)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
 
         lbConversationName.setText("Conversation name");
+
+        jScrollPane3.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane3.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
+
+        tfConversation.setEditable(false);
+        tfConversation.setColumns(20);
+        tfConversation.setLineWrap(true);
+        tfConversation.setRows(5);
+        tfConversation.setWrapStyleWord(true);
+        jScrollPane3.setViewportView(tfConversation);
 
         tfChatBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
@@ -187,89 +250,126 @@ public class MainUI extends javax.swing.JFrame {
             }
         });
 
-        tfFriendId.addActionListener(new java.awt.event.ActionListener() {
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 313, Short.MAX_VALUE)
+                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                        .addComponent(tfChatBox)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnSend)))
+                .addGap(0, 0, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(lbConversationName)
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                .addComponent(lbConversationName)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jScrollPane3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(tfChatBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(btnSend)))
+        );
+
+        jLabel3.setText("Status:");
+
+        rbOnline.setSelected(true);
+        rbOnline.setText("Online");
+        rbOnline.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                tfFriendIdActionPerformed(evt);
+                rbOnlineActionPerformed(evt);
             }
         });
 
-        btnAddFriend.setText("Add friend");
-        btnAddFriend.addActionListener(new java.awt.event.ActionListener() {
+        rbInvisible.setText("Invisible");
+        rbInvisible.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAddFriendActionPerformed(evt);
+                rbInvisibleActionPerformed(evt);
             }
         });
 
-        btnAddGroup.setText("Add Group");
-        btnAddGroup.addActionListener(new java.awt.event.ActionListener() {
+        rbAway.setText("Away");
+        rbAway.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                btnAddGroupActionPerformed(evt);
+                rbAwayActionPerformed(evt);
             }
         });
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jLabel3)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(rbOnline)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 4, Short.MAX_VALUE)
+                .addComponent(rbAway)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(rbInvisible)
+                .addGap(62, 62, 62))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(12, Short.MAX_VALUE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabel3)
+                    .addComponent(rbOnline)
+                    .addComponent(rbInvisible)
+                    .addComponent(rbAway))
+                .addContainerGap())
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(jLabel1)
-                        .addGap(0, 46, Short.MAX_VALUE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE))
+                    .addComponent(jLabel1)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(3, 3, 3)
-                        .addComponent(jLabel2))
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jScrollPane3, javax.swing.GroupLayout.PREFERRED_SIZE, 301, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(lbConversationName))
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(18, 18, 18)
-                                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, 121, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(layout.createSequentialGroup()
-                                .addGap(28, 28, 28)
-                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addComponent(btnAddGroup)
-                                    .addComponent(btnAddFriend)))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addComponent(tfChatBox, javax.swing.GroupLayout.PREFERRED_SIZE, 222, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(18, 18, 18)
-                        .addComponent(btnSend))))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 72, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel2))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(75, 75, 75))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGap(39, 39, 39)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel1)
-                    .addComponent(jLabel2)
-                    .addComponent(lbConversationName))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(32, 32, 32)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 225, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
-                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jScrollPane3)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(tfFriendId, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(btnAddFriend)
-                                .addGap(28, 28, 28)
-                                .addComponent(btnAddGroup)
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(tfChatBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(btnSend))))
+                            .addComponent(jLabel1)
+                            .addComponent(jLabel2))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 207, Short.MAX_VALUE)
+                            .addComponent(jScrollPane2)
+                            .addComponent(jPanel1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -352,6 +452,36 @@ public class MainUI extends javax.swing.JFrame {
         dialog.setVisible(true);
     }//GEN-LAST:event_btnAddGroupActionPerformed
 
+    private void rbOnlineActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbOnlineActionPerformed
+        rbAway.setSelected(false);
+        rbInvisible.setSelected(false);
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(9);
+        pack.setUsername(userId);
+        pack.setContent("Online");
+        sender.setChatPackage(pack);
+    }//GEN-LAST:event_rbOnlineActionPerformed
+
+    private void rbAwayActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbAwayActionPerformed
+        rbOnline.setSelected(false);
+        rbInvisible.setSelected(false);
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(9);
+        pack.setUsername(userId);
+        pack.setContent("Away");
+        sender.setChatPackage(pack);
+    }//GEN-LAST:event_rbAwayActionPerformed
+
+    private void rbInvisibleActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_rbInvisibleActionPerformed
+        rbOnline.setSelected(false);
+        rbAway.setSelected(false);
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(9);
+        pack.setUsername(userId);
+        pack.setContent("Offline");
+        sender.setChatPackage(pack);
+    }//GEN-LAST:event_rbInvisibleActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -393,12 +523,19 @@ public class MainUI extends javax.swing.JFrame {
     private javax.swing.JButton btnSend;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JLabel lbConversationName;
     private javax.swing.JList<String> listConversations;
     private javax.swing.JList<String> listFriends;
+    private javax.swing.JRadioButton rbAway;
+    private javax.swing.JRadioButton rbInvisible;
+    private javax.swing.JRadioButton rbOnline;
     private javax.swing.JTextField tfChatBox;
     private javax.swing.JTextArea tfConversation;
     private javax.swing.JTextField tfFriendId;
@@ -410,23 +547,27 @@ public class MainUI extends javax.swing.JFrame {
 //        }
 //    }
     public void addGroupConversationList(List<Conversation> conversationList){
+        
         conversationModel.clear();
         for(int i=0;i<conversationList.size();i++){
-            conversationModel.addElement(conversationList.get(i));
+            conversationModel.addElement(conversationList.get(i));//add conversation only
         }
     }
     public void addFriendConversationList(List<Conversation> conversationList){
         friendModel.clear();
         for(int i=0;i<conversationList.size();i++){
-            friendModel.addElement(conversationList.get(i));
+            //must add FriendConversation
+            FriendConversation fc = new FriendConversation();
+            fc.setConversation(conversationList.get(i));
+            fc.setName(getFriendIdFromConversation(conversationList.get(i)));
+            fc.setStatus("Offline");
+            friendModel.addElement(fc);
         }
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(10);
+        sender.setChatPackage(pack);
     }
-    void startConversation(String friendId){
-        
-    }
-    void loadConversation(String friendId){
-        
-    }
+    
     String getFriendIdFromConversation(Conversation c){
         String rs = null;
         String cname = ((Conversation)c).getName();
@@ -478,6 +619,36 @@ public class MainUI extends javax.swing.JFrame {
         sender.setChatPackage(pack);
     }
     
+    void setFriendStatus(String userId, String status){
+        for(int i=0;i<friendModel.size();i++){
+            if(((FriendConversation)friendModel.get(i)).getName().equals(userId)){
+                FriendConversation fc = (FriendConversation)friendModel.get(i);
+                fc.setStatus(status);
+                friendModel.set(i, fc);
+                //((FriendConversation)friendModel.get(i)).setStatus(status);
+                return;
+            }
+        }
+    }
+    void setFriendsStatus(HashMap map){
+        Iterator it = map.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry entry = (Map.Entry)it.next();
+            String userId = (String)entry.getKey();
+            String status = (String)entry.getValue();
+            for(int i=0;i<friendModel.size();i++){
+                if(((FriendConversation)friendModel.get(i)).getName().equals(userId)){
+                    FriendConversation fc = (FriendConversation)friendModel.get(i);
+                    fc.setStatus(status);
+                    friendModel.set(i, fc);
+                    //((FriendConversation)friendModel.get(i)).setStatus(status);
+                    continue;
+                }
+            }
+            
+        }
+        
+    }
 }
 
 class SentenceListComparator implements Comparator<Sentence>{
@@ -500,15 +671,27 @@ class CellRenderer implements ListCellRenderer{
         JLabel label = new JLabel();
         label.setOpaque(true);
         label.setBackground(Color.WHITE);
-        if(((Conversation)(value)).isGroupChat()){
+        //if(((FriendConversation)(value)).getConversation().isGroupChat()){
+        if(value.getClass().equals(Conversation.class)){
             String cname = ((Conversation)value).getName();
             String name = cname.substring(0,cname.indexOf(" :"));
             label.setText(name);
         }else{
-            String cname = ((Conversation)value).getName();
-            String name1 = cname.substring(0,cname.indexOf(" - "));
-            String name2 = cname.substring(cname.indexOf(" - ") + 3, cname.length());
-            label.setText(name1.equals(userId)?name2:name1);
+//            String cname = ((Conversation)value).getName();
+//            String name1 = cname.substring(0,cname.indexOf(" - "));
+//            String name2 = cname.substring(cname.indexOf(" - ") + 3, cname.length());
+//            label.setText(name1.equals(userId)?name2:name1);
+            label.setText(((FriendConversation)value).getName());
+            if(((FriendConversation)value).getStatus().equals("Online")){
+                label.setBackground(Color.GREEN);
+            }
+            if(((FriendConversation)value).getStatus().equals("Away")){
+                label.setBackground(Color.RED);
+            }
+            if(((FriendConversation)value).getStatus().equals("Offline")){
+                label.setBackground(Color.WHITE);
+                
+            }
         }
         if(isSelected){
             label.setBackground(Color.LIGHT_GRAY);
@@ -524,4 +707,44 @@ class CellRenderer implements ListCellRenderer{
         String name2 = conversationName.substring(conversationName.indexOf(" - ") + 3, conversationName.length());
         return name1.equals(userName)?name2:name1;
     }
+}
+class FriendConversation{
+    private Conversation conversation;
+    private String status;
+    private String name;
+    public FriendConversation(Conversation conversation, String status) {
+        this.conversation = conversation;
+        this.status = status;
+        this.name = "Not available";
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+    public FriendConversation(){
+        status = "Offline";
+    }
+
+    public Conversation getConversation() {
+        return conversation;
+    }
+
+    public void setConversation(Conversation conversation) {
+        this.conversation = conversation;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    
+    
 }

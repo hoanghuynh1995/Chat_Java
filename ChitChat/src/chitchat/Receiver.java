@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -94,7 +95,7 @@ public class Receiver implements Runnable{
                         MainUIRef.addGroupConversationList(conversationList);
                         break;
                     }
-                    case 7:{
+                    case 7:{//friend's conversation list
                         System.out.println("Received friend conversation list");
                         List<Conversation> conversationList = (List<Conversation>)pack.getContent();
                         MainUIRef.addFriendConversationList(conversationList);
@@ -117,6 +118,16 @@ public class Receiver implements Runnable{
                             MainUIRef.addGroupToList((Conversation)pack.getContent());
                             break;
                         }
+                    }
+                    case 11:{//a friend's status
+                        String friendId = pack.getUsername();
+                        String status = (String)pack.getContent();
+                        MainUIRef.setFriendStatus(friendId, status);
+                        break;
+                    }
+                    case 12:{
+                        MainUIRef.setFriendsStatus((HashMap)pack.getContent());
+                        break;
                     }
                 }
                 //--------------------------------------------------------------------------------------------

@@ -5,12 +5,9 @@
         <group>
             <file>file:/D:/hk6/Java/projects/ChitChatServer/src/chitchatserver/UserDAO.java</file>
             <file>file:/D:/hk6/Java/projects/ChitChatServer/src/socketmanager/Sender.java</file>
-            <file>file:/D:/hk6/Java/projects/ChitChatServer/src/chitchatserver/UserConversationDAO.java</file>
             <file>file:/D:/hk6/Java/projects/ChitChatServer/src/socketmanager/ReceiverManager.java</file>
-            <file>file:/D:/hk6/Java/projects/ChitChatServer/src/chitchatserver/ConversationDAO.java</file>
             <file>file:/D:/hk6/Java/projects/ChitChatServer/src/socketmanager/SocketManager.java</file>
             <file>file:/D:/hk6/Java/projects/ChitChatServer/src/socketmanager/Receiver.java</file>
-            <file>file:/D:/hk6/Java/projects/ChitChatServer/src/chitchatserver/SentenceDAO.java</file>
         </group>
     </open-files>
 </project-private>

@@ -36,23 +36,19 @@ public class Sender implements Runnable{
         this.pack = pack;
     }
     public synchronized void setChatPackage(ChatPackage.ChatPackage pack){
-//        synchronized(free){
-//            while(!free);
-//        }
-        //queueLock.lock();
-        //System.out.println("Begin locking");
+        System.out.println("Begin");
         free = false;
         this.pack = pack;
         synchronized(this){
             this.notify();
             try {
                 this.wait();
+                System.out.println("Waked up");
             } catch (InterruptedException ex) {
                 Logger.getLogger(Sender.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        //queueLock.unlock();
-        //System.out.println("After locking");
+        System.out.println("Sent\n");
     }
     @Override
     public void run() {
@@ -73,16 +69,14 @@ public class Sender implements Runnable{
                     }
                     synchronized(this){
                         this.notify();
+                        System.out.println("Notified");
                     }
                     //use synchronized for blocking thread, prevent this thread to use CPU
                     synchronized(this){
                         this.wait();
                     }
+                    System.out.println("Awake");
                 }
-                
-                
-                
-                
             }catch(Exception ex){
                 System.out.println(ex.getMessage());
             }

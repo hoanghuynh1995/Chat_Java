@@ -158,8 +158,9 @@ public class SignIn extends javax.swing.JFrame {
             Thread receiver = new Thread(new Receiver(s));
             receiver.start();
             Thread senderThread = new Thread(sender);
+            senderThread.setPriority(Thread.MAX_PRIORITY);
             senderThread.start();
-            
+            Thread.sleep(100);
             sender.setChatPackage(pack);
             receiver.join();
             if(SignIn.responseFlag == 0){

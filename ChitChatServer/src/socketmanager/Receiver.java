@@ -22,6 +22,7 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -73,9 +74,13 @@ public class Receiver implements Runnable{
                         System.out.println("Username: " + userId);
                         receiverManager.addReceiver(this);
                         System.out.println("Receiver list count: " + receiverManager.receiverList.size());
-                        for(int i=0;i<receiverManager.receiverList.size();i++){
-                            System.out.println(receiverManager.receiverList.get(i).userId);
-                        }
+                        //update user status
+                        User user = UserDAO.getUser(userId);
+                        user.setStatus("Online");
+                        UserDAO.updateUser(user);
+                        
+                        //notify all friends
+                        broadcast(userId,"Online");
                         break;
                     }
                     case 0:{//chat
@@ -85,7 +90,11 @@ public class Receiver implements Runnable{
                         break;
                     }
                     case 1:{//sign out
-                        User user = (User)pack.getContent();
+                        //User user = (User)pack.getContent();
+                        //user.setStatus("Offline");
+                        //UserDAO.updateUser(user);
+                        String userId = pack.getUsername();
+                        User user = UserDAO.getUser(userId);
                         user.setStatus("Offline");
                         UserDAO.updateUser(user);
                         loop = false;
@@ -118,8 +127,8 @@ public class Receiver implements Runnable{
                             pack.setCode(1);
                             sender.setChatPackage(pack);
                             //update status
-                            user.setStatus("Online");
-                            UserDAO.updateUser(user);
+//                            user.setStatus("Online");
+//                            UserDAO.updateUser(user);
                         }
                         break;
                     }
@@ -199,6 +208,13 @@ public class Receiver implements Runnable{
                         pack.setCode(7);
                         pack.setContent(rs);
                         sender.setChatPackage(pack);
+                        
+                        //get friends's status
+                        List<Friend> friends = FriendDAO.getFriend(userId);
+                        HashMap map = new HashMap();
+                        for(int i=0;i<friends.size();i++){
+                            map.put(friends.get(i).getFriendId(), UserDAO.getStatus(friends.get(i).getFriendId()));
+                        }
                         break;
                     }
                     case 7:{//get conversation's sentences
@@ -247,6 +263,28 @@ public class Receiver implements Runnable{
                         }
                         break;
                     }
+                    case 9:{//update status
+                        String userId = pack.getUsername();
+                        String status = (String)pack.getContent();
+                        User user = UserDAO.getUser(userId);
+                        user.setStatus(status);
+                        UserDAO.updateUser(user);
+                        broadcast(userId,status);
+                        break;
+                    }
+                    case 10:{//friends's status
+                        //get friends's status
+                        List<Friend> friends = FriendDAO.getFriend(userId);
+                        HashMap map = new HashMap();
+                        for(int i=0;i<friends.size();i++){
+                            map.put(friends.get(i).getFriendId(), UserDAO.getStatus(friends.get(i).getFriendId()));
+                        }
+                        ChatPackage pack = new ChatPackage();
+                        pack.setCode(12);
+                        pack.setContent(map);
+                        sender.setChatPackage(pack);
+                        break;
+                    }
                 }
                
                 //-------------------------------------------------------------------------
@@ -266,7 +304,12 @@ public class Receiver implements Runnable{
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        
+        broadcast(userId,"Offline");
+        if(userId != null){
+            User user = UserDAO.getUser(userId);
+            user.setStatus("Offline");
+            UserDAO.updateUser(user);
+        }
         receiverManager.removeReceiver(s.getPort()); 
         System.out.println("end running receiver: connection dead:" + s.isClosed());
         
@@ -288,6 +331,17 @@ public class Receiver implements Runnable{
             pack.setConversationId(conversationId);//optinal
         for(int i=0;i<users.size();i++){
             receiverManager.send(users.get(i).getUserId(), pack);
+        }
+    }
+    public void broadcast(String userId, String status){
+        List<Friend> friends = FriendDAO.getFriend(userId);
+        
+        ChatPackage pack = new ChatPackage();
+        pack.setCode(11);
+        pack.setUsername(userId);
+        pack.setContent(status);
+        for(int i=0;i<friends.size();i++){
+            receiverManager.send(friends.get(i).getFriendId(), pack);
         }
     }
 }
