@@ -9,6 +9,7 @@ import chitchatserver.ConversationDAO;
 import chitchatserver.FriendDAO;
 import chitchatserver.SentenceDAO;
 import chitchatserver.UserConversationDAO;
+import chitchatserver.UserDAO;
 import java.net.*;
 import java.util.List;
 
@@ -20,6 +21,7 @@ public class SocketManager {
     
     public static void main(String[] args) {
         try{
+            
             ServerSocket s = new ServerSocket(3334);
             System.out.println("Start waiting for client...");
             

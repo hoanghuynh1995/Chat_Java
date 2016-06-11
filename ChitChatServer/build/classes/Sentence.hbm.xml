@@ -20,8 +20,8 @@
 			<column name="content"/>
 		</property>
 		
-		<property name="sequence" type="int">
-			<column name="sequence"/>
+		<property name="store" type="byte[]">
+			<column name="store"/>
 		</property>
 	</class>
 </hibernate-mapping>

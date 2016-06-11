@@ -84,9 +84,17 @@ public class Receiver implements Runnable{
                         break;
                     }
                     case 0:{//chat
-                        int conversationId = pack.getConversationId();
-                        SentenceDAO.addSentence((Sentence)pack.getContent());
-                        broadcast((Sentence)pack.getContent());
+                        if(pack.getUsername() == null){//send file
+                            //int conversationId = pack.getConversationId();
+                            SentenceDAO.addSentence((Sentence)pack.getContent());
+                            broadcast((Sentence)pack.getContent());
+                        }else{
+                            if(pack.getUsername().equals("1")){
+                                //int conversationId = pack.getConversationId();
+                                SentenceDAO.addSentence((Sentence)pack.getContent());
+                                broadcast((Sentence)pack.getContent());
+                            }
+                        }
                         break;
                     }
                     case 1:{//sign out

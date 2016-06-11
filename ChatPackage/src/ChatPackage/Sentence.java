@@ -16,19 +16,17 @@ public class Sentence implements Serializable{
     String userId;
     int conversationId;
     String content;
-    int sequence;
+    byte[] store;
 
-    public Sentence() {
-    }
-    
-    
-
-    public Sentence(int id, String userId, int conversationId, String content, int sequence) {
+    public Sentence(int id, String userId, int conversationId, String content, byte[] store) {
         this.id = id;
         this.userId = userId;
         this.conversationId = conversationId;
         this.content = content;
-        this.sequence = sequence;
+        this.store = store;
+    }
+
+    public Sentence() {
     }
 
     public int getId() {
@@ -63,12 +61,13 @@ public class Sentence implements Serializable{
         this.content = content;
     }
 
-    public int getSequence() {
-        return sequence;
+    public byte[] getStore() {
+        return store;
     }
 
-    public void setSequence(int sequence) {
-        this.sequence = sequence;
+    public void setStore(byte[] store) {
+        this.store = store;
     }
+
     
 }
