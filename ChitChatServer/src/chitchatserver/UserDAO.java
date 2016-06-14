@@ -62,7 +62,8 @@ public class UserDAO {
         return true;
     }
     public static boolean signIn(User user){
-        if(getUser(user.getId()) == null){
+        User u = getUser(user.getId());
+        if(u == null || u.getStatus().equals("Online")){
             return false;
         }
         Session session = HibernateUtil.getSessionFactory().openSession();

@@ -130,7 +130,8 @@ public class Receiver implements Runnable{
                             ChatPackage pack = new ChatPackage();
                             pack.setCode(2);
                             sender.setChatPackage(pack);
-                        }else{//sign in successful
+                        }else{
+                            
                             ChatPackage pack = new ChatPackage();
                             pack.setCode(1);
                             sender.setChatPackage(pack);
@@ -157,8 +158,8 @@ public class Receiver implements Runnable{
                             friend.setFriendId(temp);
                             FriendDAO.addFriend(friend);
                             ChatPackage pack = new ChatPackage();
-                            pack.setCode(4);
-                            sender.setChatPackage(pack);
+//                            pack.setCode(4);
+//                            sender.setChatPackage(pack);
                             
                             //add conversation
                             Conversation c = new Conversation();
@@ -173,6 +174,9 @@ public class Receiver implements Runnable{
                             uc2.setUserId(friend.getUserId());
                             UserConversationDAO.addUserConversation(uc1);
                             UserConversationDAO.addUserConversation(uc2);
+                            
+                            broadcast(userId,c);
+                            broadcast(friendId,c);
                         }
                         System.out.println("Handle adding friend");
                         break;
@@ -351,6 +355,11 @@ public class Receiver implements Runnable{
         for(int i=0;i<friends.size();i++){
             receiverManager.send(friends.get(i).getFriendId(), pack);
         }
+    }
+    public void broadcast(String userId, Conversation conversation){
+        pack.setCode(4);
+        pack.setContent(conversation);
+        receiverManager.send(userId, pack);
     }
 }
 

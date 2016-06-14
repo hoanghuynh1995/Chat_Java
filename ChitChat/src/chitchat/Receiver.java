@@ -81,6 +81,8 @@ public class Receiver implements Runnable{
                     }
                     case 4:{//add friend successful
                         MainUI.responseFlag = 1;
+                        Conversation conversation = (Conversation)pack.getContent();
+                        MainUIRef.addFriendConversation(conversation);
                         break;
                     }
                     case 5:{//friend list
