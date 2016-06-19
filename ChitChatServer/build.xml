@@ -43,7 +43,7 @@
 				<attribute name="Class-Path" value="${build.dir}/jar/lib/*.jar"/>
 				<attribute name="Main-Class" value="socketmanager.SocketManager"/>
 		  </manifest>
-
+			<zipgroupfileset dir="lib/" includes="*.jar"/>
 	   </jar>
 	</target>
 	

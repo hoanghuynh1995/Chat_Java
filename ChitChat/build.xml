@@ -33,14 +33,14 @@
    
    <target name="build" depends="compile">
 		
-	   <jar destfile="${build.dir}/jar/server.jar"
+	   <jar destfile="${build.dir}/jar/client.jar"
 		  basedir="${classes.dir}">
 		
 		  <manifest>
 				<attribute name="Class-Path" value="${build.dir}/jar/lib/*.jar"/>
 				<attribute name="Main-Class" value="chitchat.SignIn"/>
 		  </manifest>
-
+			<zipgroupfileset dir="lib/" includes="*.jar"/>
 	   </jar>
 	</target>
 	
@@ -48,7 +48,7 @@
 	   <java fork="true" classname="chitchat.SignIn">
 			<classpath>
 				<path refid="master-classpath"/>
-				<path location="${build.dir}/jar/server.jar"/>
+				<path location="${build.dir}/jar/client.jar"/>
 			</classpath>
 	   </java>
 	</target>
