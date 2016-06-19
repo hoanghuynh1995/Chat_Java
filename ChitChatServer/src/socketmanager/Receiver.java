@@ -45,7 +45,7 @@ public class Receiver implements Runnable{
         this.receiverManager = receiverManager;
         sender = new Sender(s,null);
         Thread t = new Thread(sender);
-        t.setPriority(2);
+        t.setPriority(Thread.MAX_PRIORITY);
         t.start();
     }     
     

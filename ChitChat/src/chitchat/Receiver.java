@@ -92,14 +92,16 @@ public class Receiver implements Runnable{
                         break;
                     }
                     case 6:{//conversation list
-                        System.out.println("Received group conversation list");
+                        
                         List<Conversation> conversationList = (List<Conversation>)pack.getContent();
+                        System.out.println("Received group conversation list, list size: " + conversationList.size());
                         MainUIRef.addGroupConversationList(conversationList);
                         break;
                     }
                     case 7:{//friend's conversation list
-                        System.out.println("Received friend conversation list");
+                        
                         List<Conversation> conversationList = (List<Conversation>)pack.getContent();
+                        System.out.println("Received friend conversation list, list size: " + conversationList.size());
                         MainUIRef.addFriendConversationList(conversationList);
                         break;
                     }
